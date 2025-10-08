@@ -1,19 +1,22 @@
-
+using UserApp;
 
 namespace UserApp;
 
-class User
-{   public string Email;
-    string _password;
+public class User
+{
+    public string Username { get; }
+    public string Password { get; }
 
-    public User(string email, string password)
+
+    public User(string username, string password)
     {
-         Email = email;
-        _password = password;
+        Username = username;
+        Password = password;
     }
+
     public bool TryLogin(string username, string password)
     {
-        return username == Email && password == _password;
+        return Username == username && Password == password;
     }
-}
 
+}

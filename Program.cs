@@ -1,83 +1,145 @@
-﻿using UserApp;
-class User
-{
-    public string Username { get; }
-    private string Password { get; }
+﻿namespace UserApp;
 
-    public User(string username, string password)
+    class Program
     {
-        Username = username;
-        Password = password;
-    }
-
-    public bool TryLogin(string username, string password)
-    {
-        return username == Username && password == Password;
-    }
-}
-
-class Program
-{
-    static void Main()
-    {
-        List<User> users = new List<User>();
-        users.Add(new User("Azar", "Dani"));
-
-        User? active_user = null;
-        bool running = true;
-
-        while (running)
+        static void Main()
         {
-            Console.Clear();
-            Console.WriteLine("Welcome to the trading site");
-            Thread.Sleep(2000);
+            List<User> users = new List<User>();
 
-            if (active_user == null)
+            // läsa in användare från fil, ifall den finns
+            if (File.Exists("users.txt"))
             {
-                Console.WriteLine("Sign in to begin");
-
-                Console.Write("Username: ");
-                string username = Console.ReadLine();
-
-                Console.Write("Password: ");
-                string password = Console.ReadLine();
-
-                foreach (User user in users)
+                foreach (var line in File.ReadAllLines("users.txt"))
                 {
-                    if (user.TryLogin(username, password))
-                    {
-                        active_user = user;
-                        Console.WriteLine($"Welcome {user.Username}!");
-                        Thread.Sleep(2000);
-                        break;
-                    }
+                    string[] parts = line.Split(';');
+                    if (parts.Length == 2)
+                        users.Add(new User(parts[0], parts[1]));
                 }
+            }
+
+            User active_user = null;
+            bool is_running = true;
+
+            while (is_running)
+            {
+                Console.Clear();
 
                 if (active_user == null)
                 {
-                    Console.WriteLine("Login failed, try again...");
-                    Thread.Sleep(2000);
+                    Console.WriteLine("Welcome to Trade App!");
+                    Thread.Sleep(1500);
+                    Console.WriteLine("\n1. Sign up");
+                    Console.WriteLine("2. Log in");
+                    Console.WriteLine("3. Save users");
+                    Console.WriteLine("4. Exit");
+                    Console.Write("\nChoose option: ");
+                    string cases = Console.ReadLine();
+
+                    switch (cases)
+                    {
+                        case "1":
+                            Console.Write("Choose a username: ");
+                            string username = Console.ReadLine();
+
+                            bool usernameTaken = false;
+                            foreach (User user in users)
+                            {
+                                if (user.Username == username)
+                                {
+                                    usernameTaken = true;
+                                    break;
+                                }
+                            }
+
+                            if (usernameTaken)
+                            {
+                                Console.WriteLine("That username is taken!");
+                                Thread.Sleep(1500);
+                                break;
+                            }
+
+                            Console.Write("Choose a password: ");
+                            string password = Console.ReadLine();
+
+                            users.Add(new User(username, password));
+                            Console.WriteLine("User registered successfully!");
+                            Thread.Sleep(1500);
+                            break;
+
+                        case "2":
+                            Console.Write("Username: ");
+                            string loginUser = Console.ReadLine();
+                            Console.Write("Password: ");
+                            string loginPass = Console.ReadLine();
+
+                            foreach (User user in users)
+                            {
+                                if (user.TryLogin(loginUser, loginPass))
+                                {
+                                    active_user = user;
+                                    Console.WriteLine($"Welcome {user.Username}, {user.Password}");
+                                    Thread.Sleep(1500);
+                                    break;
+                                }
+                            }
+
+                            if (active_user == null)
+                            {
+                                Console.WriteLine("Invalid username or password!");
+                                Thread.Sleep(1500);
+                            }
+                            break;
+
+                        case "3":
+                            using (StreamWriter sw = new StreamWriter("users.txt"))
+                            {
+                                foreach (User user in users)
+                                {
+                                    sw.WriteLine($"{user.Username};{user.Password}");
+                                }
+                            }
+                            Console.WriteLine("Users saved successfully!");
+                            Thread.Sleep(1500);
+                            break;
+
+                        case "4":
+                            is_running = false;
+                            break;
+
+                        default:
+                            Console.WriteLine("Invalid option!");
+                            Thread.Sleep(1500);
+                            break;
+                    }
                 }
-            }
-            else
-            {
-                Console.Clear();
-                Console.WriteLine($"You are logged in as {active_user.Username}");
-                Console.WriteLine("Type 'logout' to sign out, or 'quit' to exit program.");
-
-                string cmd = Console.ReadLine();
-
-                switch (cmd)
+                else
                 {
-                    case "logout":
-                        active_user = null;
-                        break;
+                    Console.Clear();
+                    Console.WriteLine($"You are logged in as {active_user.Username}");
+                    Console.WriteLine("Type 'logout' to sign out:");
+                    string cmd = Console.ReadLine();
 
-                    case "quit":
-                        running = false;
-                        break;
+                    if (cmd.ToLower() == "logout")
+                    {
+                        active_user = null;
+                        Console.WriteLine("You have logged out.");
+                        Thread.Sleep(1000);
+                    }
                 }
             }
         }
     }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
